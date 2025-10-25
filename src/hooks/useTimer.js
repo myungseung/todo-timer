@@ -10,6 +10,13 @@ export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
   const [currentTimerStartTime, setCurrentTimerStartTime] = useState(POMODORO_TIME)
   const [showPopup, setShowPopup] = useState(false)
   const timerIntervalRef = useRef(null)
+  const onTimeSpentRef = useRef(onTimeSpent)
+  const onTodoPomUpdateRef = useRef(onTodoPomUpdate)
+
+  useEffect(() => {
+    onTimeSpentRef.current = onTimeSpent
+    onTodoPomUpdateRef.current = onTodoPomUpdate
+  }, [onTimeSpent, onTodoPomUpdate])
 
   useEffect(() => {
     return () => {
@@ -47,8 +54,8 @@ export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
 
     if (timerState === 'running') {
       const elapsed = currentTimerStartTime - timerSeconds
-      onTimeSpent(elapsed)
-      onTodoPomUpdate(currentTodoId, elapsed / POMODORO_TIME)
+      onTimeSpentRef.current(elapsed)
+      onTodoPomUpdateRef.current(currentTodoId, elapsed / POMODORO_TIME)
     }
 
     setTimerState('stopped')

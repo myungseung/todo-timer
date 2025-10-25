@@ -105,9 +105,14 @@ export const useTodos = () => {
   }
 
   const updateTodoPomCount = (id, pomCount) => {
-    setTodos(prev => prev.map(t =>
-      t.id === id ? { ...t, pomCount } : t
-    ))
+    console.log('updateTodoPomCount called:', { id, pomCount })
+    setTodos(prev => {
+      const updated = prev.map(t =>
+        t.id === id ? { ...t, pomCount } : t
+      )
+      console.log('todos after update:', updated)
+      return updated
+    })
   }
 
   const getStats = () => {

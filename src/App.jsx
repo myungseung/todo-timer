@@ -37,9 +37,13 @@ function App() {
       setTotalTimeSpent(prev => prev + elapsed)
     },
     onTodoPomUpdate: (todoId, pomCount) => {
+      console.log('onTodoPomUpdate called:', { todoId, pomCount, todos })
       const todo = todos.find(t => t.id === todoId)
+      console.log('found todo:', todo)
       if (todo) {
-        updateTodoPomCount(todoId, (todo.pomCount || 0) + pomCount)
+        const newPomCount = (todo.pomCount || 0) + pomCount
+        console.log('updating pomCount to:', newPomCount)
+        updateTodoPomCount(todoId, newPomCount)
       }
     }
   })

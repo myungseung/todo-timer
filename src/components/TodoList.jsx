@@ -14,6 +14,7 @@ export const TodoList = ({
   onDeleteTodo
 }) => {
   const inputRefs = useRef({})
+  const isComposingRef = useRef(false)
   const stats = getStats()
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export const TodoList = ({
   }, [focusedIndex, todos])
 
   const handleKeyDown = (e, todo, index) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !isComposingRef.current) {
       e.preventDefault()
       onAddTodo(todo.id, todo.level)
       setFocusedIndex(index + 1)
@@ -125,6 +126,8 @@ export const TodoList = ({
                 value={todo.text}
                 onChange={(e) => onUpdateText(todo.id, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, todo, index)}
+                onCompositionStart={() => isComposingRef.current = true}
+                onCompositionEnd={() => isComposingRef.current = false}
                 onClick={() => setFocusedIndex(index)}
                 onFocus={() => setFocusedIndex(index)}
               />

@@ -38,18 +38,28 @@
 
 **Live Demo:** [https://todo-timer-kj0fnhhws-chris-projects-493131d9.vercel.app](https://todo-timer-kj0fnhhws-chris-projects-493131d9.vercel.app)
 
-### 로컬 실행
+### 자동 배포 (Vercel)
+GitHub 저장소와 Vercel이 연동되어 있어 **자동 배포**가 진행됩니다:
+- `master` 브랜치에 push 시 자동으로 프로덕션 빌드 & 배포
+- 별도로 `npm run build` 명령어를 실행할 필요 없음
+- 배포 상태는 [Vercel Dashboard](https://vercel.com/dashboard)에서 확인
+
+### 로컬 개발
 ```bash
-# 간단한 HTTP 서버 실행
-python3 -m http.server 8000
+# 개발 서버 실행 (Hot Module Replacement)
+npm run dev
 
 # 브라우저에서 접속
-open http://localhost:8000
+# http://localhost:5173
 ```
 
-### Vercel 배포
+### 로컬 빌드 테스트 (선택사항)
 ```bash
-npx vercel --prod
+# 프로덕션 빌드
+npm run build
+
+# 빌드 결과 미리보기
+npm run preview
 ```
 
 ## 📱 PWA 설치

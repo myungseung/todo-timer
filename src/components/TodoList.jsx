@@ -1,0 +1,143 @@
+import { useRef, useEffect } from 'react'
+
+export const TodoList = ({
+  todos,
+  currentTodoId,
+  timerState,
+  focusedIndex,
+  setFocusedIndex,
+  getStats,
+  onToggle,
+  onUpdateText,
+  onUpdateLevel,
+  onAddTodo,
+  onDeleteTodo
+}) => {
+  const inputRefs = useRef({})
+  const stats = getStats()
+
+  useEffect(() => {
+    if (todos.length > 0 && todos[focusedIndex]) {
+      const input = inputRefs.current[todos[focusedIndex].id]
+      if (input) {
+        input.focus()
+      }
+    }
+  }, [focusedIndex, todos])
+
+  const handleKeyDown = (e, todo, index) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+      e.preventDefault()
+      onAddTodo(todo.id, todo.level)
+      setFocusedIndex(index + 1)
+    }
+
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault()
+      if (todo.level < 3) {
+        onUpdateLevel(todo.id, todo.level + 1)
+      }
+    }
+
+    if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault()
+      if (todo.level > 0) {
+        onUpdateLevel(todo.id, todo.level - 1)
+      }
+    }
+
+    if (e.key === 'Backspace' && e.target.value === '') {
+      e.preventDefault()
+      onDeleteTodo(todo.id)
+    }
+  }
+
+  const isCompact = timerState === 'running'
+
+  return (
+    <div className={`bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg flex flex-col overflow-hidden transition-all duration-300 ${
+      isCompact ? 'flex-[0_0_auto] overflow-visible' : 'flex-1'
+    }`}>
+      <div className={`flex gap-5 items-center text-xs text-zinc-500 py-3 border-b border-zinc-800 mb-3 flex-shrink-0 transition-all duration-300 ${
+        isCompact ? 'hidden' : 'flex'
+      }`}>
+        <div className="flex gap-1.5 items-center">
+          <span>완료율</span>
+          <span className="font-semibold text-zinc-400 tabular-nums">{stats.rate}%</span>
+        </div>
+        <div className="flex gap-1.5 items-center">
+          <span>총 소요 시간</span>
+          <span className="font-semibold text-zinc-400 tabular-nums">{stats.hours}h {stats.mins}m</span>
+        </div>
+        <div className="flex gap-1.5 items-center ml-auto">
+          <span className="font-semibold text-zinc-400 tabular-nums">🍅 {stats.totalPom.toFixed(1)}</span>
+        </div>
+      </div>
+
+      <ul className={`list-none min-h-0 transition-all duration-300 ${
+        isCompact ? 'flex-[0_0_auto] overflow-visible' : 'flex-1 overflow-y-auto'
+      }`}>
+        {todos.map((todo, index) => {
+          const isActive = currentTodoId === todo.id && timerState === 'running'
+          const isHidden = timerState === 'running' && currentTodoId !== todo.id
+          const paddingLeft = {
+            0: 'pl-3',
+            1: 'pl-11',
+            2: 'pl-[76px]',
+            3: 'pl-[108px]'
+          }[todo.level]
+
+          return (
+            <li
+              key={todo.id}
+              style={isHidden ? {
+                height: 0,
+                minHeight: 0,
+                maxHeight: 0,
+                padding: 0,
+                margin: 0,
+                border: 0,
+                opacity: 0
+              } : {}}
+              className={`flex items-center gap-3 p-2.5 px-3 rounded-md mb-0.5 transition-all duration-300 relative border border-transparent min-h-[44px] ${paddingLeft} ${
+                isActive ? 'bg-red-500/10 border-l-[3px] border-l-red-500' : ''
+              } ${
+                isHidden ? 'overflow-hidden pointer-events-none' : ''
+              } ${
+                !isActive && !isHidden ? 'hover:bg-zinc-800' : ''
+              } ${
+                todo.completed ? 'opacity-60' : ''
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="w-[18px] h-[18px] cursor-pointer flex-shrink-0 appearance-none border-2 border-zinc-600 rounded bg-transparent relative checked:bg-red-500 checked:border-red-500 after:content-[''] after:absolute after:left-[5px] after:top-[2px] after:w-[4px] after:h-[8px] after:border-zinc-50 after:border-r-2 after:border-b-2 after:rotate-45 after:opacity-0 checked:after:opacity-100"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
+              />
+              <input
+                ref={el => inputRefs.current[todo.id] = el}
+                type="text"
+                className={`flex-1 bg-transparent border-none text-zinc-50 text-[15px] outline-none font-inherit p-0.5 cursor-text ${
+                  todo.completed ? 'line-through text-zinc-500' : ''
+                }`}
+                placeholder="New task..."
+                value={todo.text}
+                onChange={(e) => onUpdateText(todo.id, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, todo, index)}
+                onClick={() => setFocusedIndex(index)}
+                onFocus={() => setFocusedIndex(index)}
+              />
+              {todo.pomCount > 0 && (
+                <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0">
+                  🍅 {todo.pomCount.toFixed(1)}
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+

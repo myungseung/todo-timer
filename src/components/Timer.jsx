@@ -41,7 +41,7 @@ export const Timer = ({ timerSeconds, isRunning, currentTimerStartTime, getTimer
         </table>
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none" ref={ticksContainerRef}></div>
       </div>
-      <div className={`text-center mt-6 text-xl font-semibold tabular-nums transition-colors duration-200 flex-shrink-0 ${
+      <div className={`text-center mt-6 text-xl font-semibold tabular-nums transition-colors duration-100 flex-shrink-0 ${
         isRunning ? 'text-red-500' : 'text-zinc-400'
       }`}>
         {getTimerDisplay()}

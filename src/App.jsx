@@ -115,7 +115,7 @@ function App() {
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 p-6 overflow-y-auto flex flex-col">
       <div className="max-w-[800px] mx-auto flex-1 flex flex-col w-full">
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+        <div className={`transition-all duration-150 ease-in-out overflow-hidden ${
           isTimerVisible
             ? 'flex-1 opacity-100 mb-6'
             : 'flex-[0] min-h-0 max-h-0 opacity-0 mb-0'

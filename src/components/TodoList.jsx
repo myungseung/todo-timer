@@ -56,10 +56,10 @@ export const TodoList = ({
   const isCompact = timerState === 'running'
 
   return (
-    <div className={`bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg flex flex-col overflow-hidden transition-all duration-300 ${
+    <div className={`bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg flex flex-col overflow-hidden transition-all duration-150 ${
       isCompact ? 'flex-[0_0_auto] overflow-visible' : 'flex-1'
     }`}>
-      <div className={`flex gap-5 items-center text-xs text-zinc-500 py-3 border-b border-zinc-800 mb-3 flex-shrink-0 transition-all duration-300 ${
+      <div className={`flex gap-5 items-center text-xs text-zinc-500 py-3 border-b border-zinc-800 mb-3 flex-shrink-0 transition-all duration-150 ${
         isCompact ? 'hidden' : 'flex'
       }`}>
         <div className="flex gap-1.5 items-center">
@@ -75,7 +75,7 @@ export const TodoList = ({
         </div>
       </div>
 
-      <ul className={`list-none min-h-0 transition-all duration-300 ${
+      <ul className={`list-none min-h-0 transition-all duration-150 ${
         isCompact ? 'flex-[0_0_auto] overflow-visible' : 'flex-1 overflow-y-auto'
       }`}>
         {todos.map((todo, index) => {
@@ -100,7 +100,7 @@ export const TodoList = ({
                 border: 0,
                 opacity: 0
               } : {}}
-              className={`flex items-center gap-3 p-2.5 px-3 rounded-md mb-0.5 transition-all duration-300 relative border border-transparent min-h-[44px] ${paddingLeft} ${
+              className={`flex items-center gap-3 p-2.5 px-3 rounded-md transition-all duration-150 relative border border-transparent min-h-[44px] ${paddingLeft} ${
                 isActive ? 'bg-red-500/10 border-l-[3px] border-l-red-500' : ''
               } ${
                 isHidden ? 'overflow-hidden pointer-events-none' : ''

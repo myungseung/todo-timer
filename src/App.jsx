@@ -1,22 +1,21 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Timer } from './components/Timer'
 import { TodoList } from './components/TodoList'
 import { useTimer } from './hooks/useTimer'
 import { useTodos } from './hooks/useTodos'
 
 function App() {
+  const [, forceUpdate] = useState(0)
   const {
     todos,
     focusedIndex,
     setFocusedIndex,
-    totalTimeSpent,
-    setTotalTimeSpent,
     addTodo,
     deleteTodo,
     toggleTodo,
     updateTodoText,
     updateTodoLevel,
-    updateTodoPomCount,
+    updateTodoTimeSpent,
     getStats
   } = useTodos()
 
@@ -24,29 +23,22 @@ function App() {
     timerSeconds,
     timerState,
     currentTodoId,
-    currentTimerStartTime,
-    showPopup,
     startTimer,
     stopTimer,
-    continueTimer,
-    setShowPopup,
     getTimerDisplay,
     getTimerRatios
   } = useTimer({
-    onTimeSpent: (elapsed) => {
-      setTotalTimeSpent(prev => prev + elapsed)
-    },
-    onTodoPomUpdate: (todoId, pomCount) => {
-      console.log('onTodoPomUpdate called:', { todoId, pomCount, todos })
-      const todo = todos.find(t => t.id === todoId)
-      console.log('found todo:', todo)
-      if (todo) {
-        const newPomCount = (todo.pomCount || 0) + pomCount
-        console.log('updating pomCount to:', newPomCount)
-        updateTodoPomCount(todoId, newPomCount)
-      }
-    }
+    onTodoTimeUpdate: updateTodoTimeSpent
   })
+
+  useEffect(() => {
+    if (timerState === 'running') {
+      const interval = setInterval(() => {
+        forceUpdate(prev => prev + 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [timerState])
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
@@ -96,7 +88,7 @@ function App() {
     if (!todo || todo.completed) return
 
     if (timerState === 'stopped') {
-      startTimer(todo.id)
+      startTimer(todo.id, todo.timeSpent || 0)
     } else if (timerState === 'running' && currentTodoId === todo.id) {
       stopTimer()
     }
@@ -127,9 +119,8 @@ function App() {
           <Timer
             timerSeconds={timerSeconds}
             isRunning={timerState === 'running'}
-            currentTimerStartTime={currentTimerStartTime}
-            getTimerDisplay={getTimerDisplay}
-            getTimerRatios={getTimerRatios}
+            timerRatios={getTimerRatios()}
+            timerDisplay={getTimerDisplay()}
           />
         </div>
 
@@ -147,23 +138,6 @@ function App() {
           onDeleteTodo={deleteTodo}
         />
       </div>
-
-      {showPopup && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000]">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center max-w-[400px] shadow-2xl">
-            <div className="text-5xl mb-4">⏰</div>
-            <div className="text-[15px] text-zinc-400 mb-6 leading-relaxed">
-              시간이 초과되었습니다!<br />25분을 추가로 제공합니다.
-            </div>
-            <button
-              className="bg-red-500 text-zinc-50 border-none rounded-md px-6 py-2.5 text-sm cursor-pointer font-semibold transition-colors hover:bg-red-600"
-              onClick={continueTimer}
-            >
-              계속하기
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

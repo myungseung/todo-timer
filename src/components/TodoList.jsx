@@ -63,10 +63,6 @@ export const TodoList = ({
         isCompact ? 'hidden' : 'flex'
       }`}>
         <div className="flex gap-1.5 items-center">
-          <span>완료율</span>
-          <span className="font-semibold text-zinc-400 tabular-nums">{stats.rate}%</span>
-        </div>
-        <div className="flex gap-1.5 items-center">
           <span>총 소요 시간</span>
           <span className="font-semibold text-zinc-400 tabular-nums">{stats.hours}h {stats.mins}m</span>
         </div>
@@ -131,9 +127,10 @@ export const TodoList = ({
                 onClick={() => setFocusedIndex(index)}
                 onFocus={() => setFocusedIndex(index)}
               />
-              {todo.pomCount > 0 && (
-                <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0">
-                  🍅 {todo.pomCount.toFixed(1)}
+              {todo.timeSpent > 0 && (
+                <div className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0">
+                  <span>{Math.floor(todo.timeSpent / 60)}:{(todo.timeSpent % 60).toString().padStart(2, '0')}</span>
+                  <span className="text-zinc-500">🍅{(Math.round((todo.timeSpent / (50 * 60)) * 10) / 10).toFixed(1)}</span>
                 </div>
               )}
             </li>

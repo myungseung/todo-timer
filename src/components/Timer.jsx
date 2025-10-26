@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export const Timer = ({ timerSeconds, isRunning, currentTimerStartTime, getTimerDisplay, getTimerRatios }) => {
+export const Timer = ({ timerSeconds, isRunning, timerRatios, timerDisplay }) => {
   const ticksContainerRef = useRef(null)
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export const Timer = ({ timerSeconds, isRunning, currentTimerStartTime, getTimer
     }
   }, [])
 
-  const { elapsedRatio, remainingRatio } = getTimerRatios()
+  const { backgroundRatio, elapsedRatio, remainingRatio } = timerRatios
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center text-center">
@@ -26,14 +26,14 @@ export const Timer = ({ timerSeconds, isRunning, currentTimerStartTime, getTimer
           className="charts-css pie hide-data bg-zinc-950"
           style={{ background: 'rgb(9, 9, 11)' }}
         >
-          <tbody style={{ background: 'rgb(9, 9, 11)', transform: 'scaleX(-1) rotate(60deg)' }}>
+          <tbody style={{ background: 'rgb(9, 9, 11)', transform: 'scaleX(-1) rotate(0deg)' }}>
             <tr style={{ '--color': 'rgb(9, 9, 11)' }}>
-              <td style={{ '--start': '0', '--end': elapsedRatio.toFixed(4) }}>
+              <td style={{ '--start': '0', '--end': (backgroundRatio + elapsedRatio).toFixed(4) }}>
                 <span className="data"></span>
               </td>
             </tr>
             <tr style={{ '--color': '#ef4444' }}>
-              <td style={{ '--start': elapsedRatio.toFixed(4), '--end': (elapsedRatio + remainingRatio).toFixed(4) }}>
+              <td style={{ '--start': (backgroundRatio + elapsedRatio).toFixed(4), '--end': '1' }}>
                 <span className="data"></span>
               </td>
             </tr>
@@ -44,7 +44,7 @@ export const Timer = ({ timerSeconds, isRunning, currentTimerStartTime, getTimer
       <div className={`text-center mt-6 text-xl font-semibold tabular-nums transition-colors duration-100 flex-shrink-0 ${
         isRunning ? 'text-red-500' : 'text-zinc-400'
       }`}>
-        {getTimerDisplay()}
+        {timerDisplay}
       </div>
     </div>
   )

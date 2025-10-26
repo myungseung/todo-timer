@@ -4,13 +4,10 @@ import { storage } from '../utils/storage'
 export const useTodos = () => {
   const [todos, setTodos] = useState([])
   const [focusedIndex, setFocusedIndex] = useState(0)
-  const [totalTimeSpent, setTotalTimeSpent] = useState(0)
 
   useEffect(() => {
-    const loadedTodos = storage.getTodos()
-    const loadedTime = storage.getTotalTimeSpent()
+    const loadedTodos = storage.getTodayTodos()
     setTodos(loadedTodos)
-    setTotalTimeSpent(loadedTime)
 
     if (loadedTodos.length === 0) {
       const todo = {
@@ -18,7 +15,7 @@ export const useTodos = () => {
         text: '',
         completed: false,
         level: 0,
-        pomCount: 0
+        timeSpent: 0
       }
       setTodos([todo])
     }
@@ -26,13 +23,9 @@ export const useTodos = () => {
 
   useEffect(() => {
     if (todos.length > 0) {
-      storage.saveTodos(todos)
+      storage.saveTodayTodos(todos)
     }
   }, [todos])
-
-  useEffect(() => {
-    storage.saveTotalTimeSpent(totalTimeSpent)
-  }, [totalTimeSpent])
 
   const addTodo = (afterId, level) => {
     const todo = {
@@ -40,7 +33,7 @@ export const useTodos = () => {
       text: '',
       completed: false,
       level: level,
-      pomCount: 0
+      timeSpent: 0
     }
 
     setTodos(prev => {
@@ -104,42 +97,33 @@ export const useTodos = () => {
     ))
   }
 
-  const updateTodoPomCount = (id, pomCount) => {
-    console.log('updateTodoPomCount called:', { id, pomCount })
-    setTodos(prev => {
-      const updated = prev.map(t =>
-        t.id === id ? { ...t, pomCount } : t
-      )
-      console.log('todos after update:', updated)
-      return updated
-    })
+  const updateTodoTimeSpent = (id, additionalSeconds) => {
+    setTodos(prev => prev.map(t =>
+      t.id === id ? { ...t, timeSpent: (t.timeSpent || 0) + additionalSeconds } : t
+    ))
   }
 
   const getStats = () => {
-    const completed = todos.filter(t => t.completed).length
-    const total = todos.length
-    const rate = total > 0 ? Math.round((completed / total) * 100) : 0
-
+    const totalTimeSpent = todos.reduce((sum, t) => sum + (t.timeSpent || 0), 0)
     const hours = Math.floor(totalTimeSpent / 3600)
     const mins = Math.floor((totalTimeSpent % 3600) / 60)
 
-    const totalPom = todos.reduce((sum, t) => sum + (t.pomCount || 0), 0)
+    // 50분 = 1 pom
+    const totalPom = Math.round(totalTimeSpent / (50 * 60) * 10) / 10
 
-    return { rate, hours, mins, totalPom }
+    return { hours, mins, totalPom }
   }
 
   return {
     todos,
     focusedIndex,
     setFocusedIndex,
-    totalTimeSpent,
-    setTotalTimeSpent,
     addTodo,
     deleteTodo,
     toggleTodo,
     updateTodoText,
     updateTodoLevel,
-    updateTodoPomCount,
+    updateTodoTimeSpent,
     getStats
   }
 }

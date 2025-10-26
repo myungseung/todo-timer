@@ -1,22 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 
-const POMODORO_TIME = 50 * 60
-const EXTRA_TIME = 25 * 60
+const INITIAL_TIMER_SECONDS = 50 * 60
 
-export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
-  const [timerSeconds, setTimerSeconds] = useState(POMODORO_TIME)
+export const useTimer = ({ onTodoTimeUpdate }) => {
+  const [timerSeconds, setTimerSeconds] = useState(INITIAL_TIMER_SECONDS)
   const [timerState, setTimerState] = useState('stopped')
   const [currentTodoId, setCurrentTodoId] = useState(null)
-  const [currentTimerStartTime, setCurrentTimerStartTime] = useState(POMODORO_TIME)
-  const [showPopup, setShowPopup] = useState(false)
+  const [initialTimeSpent, setInitialTimeSpent] = useState(0)
   const timerIntervalRef = useRef(null)
-  const onTimeSpentRef = useRef(onTimeSpent)
-  const onTodoPomUpdateRef = useRef(onTodoPomUpdate)
+  const onTodoTimeUpdateRef = useRef(onTodoTimeUpdate)
 
   useEffect(() => {
-    onTimeSpentRef.current = onTimeSpent
-    onTodoPomUpdateRef.current = onTodoPomUpdate
-  }, [onTimeSpent, onTodoPomUpdate])
+    onTodoTimeUpdateRef.current = onTodoTimeUpdate
+  }, [onTodoTimeUpdate])
 
   useEffect(() => {
     return () => {
@@ -26,23 +22,20 @@ export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
     }
   }, [])
 
-  const startTimer = (todoId) => {
+  const startTimer = (todoId, existingTimeSpent = 0) => {
+    // 50분 초과분을 계산하여 초기 타이머 설정
+    const timeInCurrentCycle = existingTimeSpent % INITIAL_TIMER_SECONDS
+    const remainingSeconds = INITIAL_TIMER_SECONDS - timeInCurrentCycle
+
     setCurrentTodoId(todoId)
-    setTimerSeconds(POMODORO_TIME)
-    setCurrentTimerStartTime(POMODORO_TIME)
+    setTimerSeconds(remainingSeconds)
+    setInitialTimeSpent(existingTimeSpent)
     setTimerState('running')
 
     timerIntervalRef.current = setInterval(() => {
-      setTimerSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(timerIntervalRef.current)
-          timerIntervalRef.current = null
-          setTimerState('stopped')
-          setShowPopup(true)
-          return 0
-        }
-        return prev - 1
-      })
+      setTimerSeconds(prev => prev - 1)
+      // 매 초마다 1초씩 저장 (새로고침 시 데이터 손실 방지)
+      onTodoTimeUpdateRef.current(todoId, 1)
     }, 1000)
   }
 
@@ -52,33 +45,7 @@ export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
       timerIntervalRef.current = null
     }
 
-    if (timerState === 'running') {
-      const elapsed = currentTimerStartTime - timerSeconds
-      onTimeSpentRef.current(elapsed)
-      onTodoPomUpdateRef.current(currentTodoId, elapsed / POMODORO_TIME)
-    }
-
     setTimerState('stopped')
-  }
-
-  const continueTimer = () => {
-    setShowPopup(false)
-    setTimerSeconds(EXTRA_TIME)
-    setCurrentTimerStartTime(EXTRA_TIME)
-    setTimerState('running')
-
-    timerIntervalRef.current = setInterval(() => {
-      setTimerSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(timerIntervalRef.current)
-          timerIntervalRef.current = null
-          setTimerState('stopped')
-          setShowPopup(true)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
   }
 
   const getTimerDisplay = () => {
@@ -88,23 +55,23 @@ export const useTimer = ({ onTimeSpent, onTodoPomUpdate }) => {
   }
 
   const getTimerRatios = () => {
-    const FULL_CIRCLE_MINUTES = 60 * 60
-    const elapsed = currentTimerStartTime - timerSeconds
-    const elapsedRatio = elapsed / FULL_CIRCLE_MINUTES
-    const remainingRatio = timerSeconds / FULL_CIRCLE_MINUTES
-    return { elapsedRatio, remainingRatio }
+    const FULL_CIRCLE_SECONDS = 60 * 60
+    // 현재 사이클에서의 총 경과 시간
+    const totalElapsedInCycle = INITIAL_TIMER_SECONDS - timerSeconds
+
+    const backgroundRatio = (10 * 60) / FULL_CIRCLE_SECONDS
+    const elapsedRatio = totalElapsedInCycle / FULL_CIRCLE_SECONDS
+    const remainingRatio = timerSeconds / FULL_CIRCLE_SECONDS
+
+    return { backgroundRatio, elapsedRatio, remainingRatio }
   }
 
   return {
     timerSeconds,
     timerState,
     currentTodoId,
-    currentTimerStartTime,
-    showPopup,
     startTimer,
     stopTimer,
-    continueTimer,
-    setShowPopup,
     getTimerDisplay,
     getTimerRatios
   }

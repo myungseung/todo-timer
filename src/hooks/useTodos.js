@@ -27,7 +27,7 @@ export const useTodos = () => {
     }
   }, [todos])
 
-  const addTodo = (afterId, level) => {
+  const addTodo = (afterId, level, insertBefore = false) => {
     const todo = {
       id: Date.now(),
       text: '',
@@ -42,7 +42,7 @@ export const useTodos = () => {
       }
       const index = prev.findIndex(t => t.id === afterId)
       const newTodos = [...prev]
-      newTodos.splice(index + 1, 0, todo)
+      newTodos.splice(insertBefore ? index : index + 1, 0, todo)
       return newTodos
     })
 
@@ -97,6 +97,16 @@ export const useTodos = () => {
     ))
   }
 
+  const updateTodoLevels = (ids, delta) => {
+    setTodos(prev => prev.map(t => {
+      if (ids.includes(t.id)) {
+        const newLevel = Math.max(0, Math.min(3, t.level + delta))
+        return { ...t, level: newLevel }
+      }
+      return t
+    }))
+  }
+
   const updateTodoTimeSpent = (id, additionalSeconds) => {
     setTodos(prev => prev.map(t =>
       t.id === id ? { ...t, timeSpent: (t.timeSpent || 0) + additionalSeconds } : t
@@ -123,6 +133,7 @@ export const useTodos = () => {
     toggleTodo,
     updateTodoText,
     updateTodoLevel,
+    updateTodoLevels,
     updateTodoTimeSpent,
     getStats
   }

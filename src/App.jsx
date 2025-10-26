@@ -15,6 +15,7 @@ function App() {
     toggleTodo,
     updateTodoText,
     updateTodoLevel,
+    updateTodoLevels,
     updateTodoTimeSpent,
     getStats
   } = useTodos()
@@ -67,12 +68,15 @@ function App() {
         if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
           return
         }
+        if (e.shiftKey) {
+          return
+        }
       }
 
-      if (e.key === 'ArrowUp') {
+      if (e.key === 'ArrowUp' && !e.shiftKey) {
         e.preventDefault()
         moveFocus(-1)
-      } else if (e.key === 'ArrowDown') {
+      } else if (e.key === 'ArrowDown' && !e.shiftKey) {
         e.preventDefault()
         moveFocus(1)
       }
@@ -134,6 +138,7 @@ function App() {
           onToggle={handleToggleTodo}
           onUpdateText={updateTodoText}
           onUpdateLevel={updateTodoLevel}
+          onUpdateLevels={updateTodoLevels}
           onAddTodo={addTodo}
           onDeleteTodo={deleteTodo}
         />

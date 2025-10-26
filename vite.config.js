@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       manifest: {
         name: 'Daily Time Tracker',
         short_name: 'Time Tracker',
@@ -26,11 +29,6 @@ export default defineConfig({
             type: 'image/png'
           }
         ]
-      },
-      workbox: {
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true
       }
     })
   ],

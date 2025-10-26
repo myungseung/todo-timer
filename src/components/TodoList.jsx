@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 export const TodoList = ({
   todos,
@@ -10,11 +10,13 @@ export const TodoList = ({
   onToggle,
   onUpdateText,
   onUpdateLevel,
+  onUpdateLevels,
   onAddTodo,
   onDeleteTodo
 }) => {
   const inputRefs = useRef({})
   const isComposingRef = useRef(false)
+  const [selectedTodos, setSelectedTodos] = useState(new Set())
   const stats = getStats()
 
   useEffect(() => {
@@ -27,29 +29,81 @@ export const TodoList = ({
   }, [focusedIndex, todos])
 
   const handleKeyDown = (e, todo, index) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setSelectedTodos(new Set())
+      return
+    }
+
     if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !isComposingRef.current) {
       e.preventDefault()
-      onAddTodo(todo.id, todo.level)
-      setFocusedIndex(index + 1)
-    }
-
-    if (e.key === 'Tab' && !e.shiftKey) {
-      e.preventDefault()
-      if (todo.level < 3) {
-        onUpdateLevel(todo.id, todo.level + 1)
+      const cursorPos = e.target.selectionStart
+      if (cursorPos === 0 && e.target.value !== '') {
+        onAddTodo(todo.id, todo.level, true)
+        setFocusedIndex(index)
+      } else {
+        onAddTodo(todo.id, todo.level, false)
+        setFocusedIndex(index + 1)
       }
+      setSelectedTodos(new Set())
     }
 
-    if (e.key === 'Tab' && e.shiftKey) {
+    if (e.key === 'ArrowUp' && e.shiftKey) {
       e.preventDefault()
-      if (todo.level > 0) {
-        onUpdateLevel(todo.id, todo.level - 1)
+      if (index > 0) {
+        const newIndex = index - 1
+        setFocusedIndex(newIndex)
+        setSelectedTodos(prev => {
+          const newSet = new Set(prev)
+          newSet.add(todo.id)
+          newSet.add(todos[newIndex].id)
+          return newSet
+        })
+      }
+      return
+    }
+
+    if (e.key === 'ArrowDown' && e.shiftKey) {
+      e.preventDefault()
+      if (index < todos.length - 1) {
+        const newIndex = index + 1
+        setFocusedIndex(newIndex)
+        setSelectedTodos(prev => {
+          const newSet = new Set(prev)
+          newSet.add(todo.id)
+          newSet.add(todos[newIndex].id)
+          return newSet
+        })
+      }
+      return
+    }
+
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !e.shiftKey) {
+      setSelectedTodos(new Set())
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      if (selectedTodos.size > 0) {
+        const selectedIds = Array.from(selectedTodos)
+        onUpdateLevels(selectedIds, e.shiftKey ? -1 : 1)
+      } else {
+        if (e.shiftKey) {
+          if (todo.level > 0) {
+            onUpdateLevel(todo.id, todo.level - 1)
+          }
+        } else {
+          if (todo.level < 3) {
+            onUpdateLevel(todo.id, todo.level + 1)
+          }
+        }
       }
     }
 
     if (e.key === 'Backspace' && e.target.value === '') {
       e.preventDefault()
       onDeleteTodo(todo.id)
+      setSelectedTodos(new Set())
     }
   }
 
@@ -104,6 +158,8 @@ export const TodoList = ({
                 !isActive && !isHidden ? 'hover:bg-zinc-800' : ''
               } ${
                 todo.completed ? 'opacity-60' : ''
+              } ${
+                selectedTodos.has(todo.id) ? 'bg-blue-500/10' : ''
               }`}
             >
               <input
@@ -124,7 +180,10 @@ export const TodoList = ({
                 onKeyDown={(e) => handleKeyDown(e, todo, index)}
                 onCompositionStart={() => isComposingRef.current = true}
                 onCompositionEnd={() => isComposingRef.current = false}
-                onClick={() => setFocusedIndex(index)}
+                onClick={() => {
+                  setFocusedIndex(index)
+                  setSelectedTodos(new Set())
+                }}
                 onFocus={() => setFocusedIndex(index)}
               />
               {todo.timeSpent > 0 && (

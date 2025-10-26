@@ -9,6 +9,8 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
   const [initialTimeSpent, setInitialTimeSpent] = useState(0)
   const timerIntervalRef = useRef(null)
   const onTodoTimeUpdateRef = useRef(onTodoTimeUpdate)
+  const startTimeRef = useRef(null)
+  const lastUpdateTimeRef = useRef(null)
 
   useEffect(() => {
     onTodoTimeUpdateRef.current = onTodoTimeUpdate
@@ -32,10 +34,21 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     setInitialTimeSpent(existingTimeSpent)
     setTimerState('running')
 
+    const now = Date.now()
+    startTimeRef.current = now
+    lastUpdateTimeRef.current = now
+
     timerIntervalRef.current = setInterval(() => {
-      setTimerSeconds(prev => prev - 1)
-      // 매 초마다 1초씩 저장 (새로고침 시 데이터 손실 방지)
-      onTodoTimeUpdateRef.current(todoId, 1)
+      const currentTime = Date.now()
+      const elapsedSeconds = Math.floor((currentTime - lastUpdateTimeRef.current) / 1000)
+
+      if (elapsedSeconds > 0) {
+        onTodoTimeUpdateRef.current(todoId, elapsedSeconds)
+        lastUpdateTimeRef.current = currentTime
+      }
+
+      const totalElapsed = Math.floor((currentTime - startTimeRef.current) / 1000)
+      setTimerSeconds(remainingSeconds - totalElapsed)
     }, 1000)
   }
 

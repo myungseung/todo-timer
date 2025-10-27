@@ -17,36 +17,37 @@ export const FocusGraph = () => {
 
   const renderDayColumn = (day) => {
     const totalSeconds = monthData[day] || 0
-    const pomCount = totalSeconds / 3000
-    const fullCells = Math.floor(pomCount)
-    const partialValue = pomCount % 1
+    const MAX_CELLS = 6
+    const SECONDS_PER_CELL = 2400 // 40분 = 2400초 (4시간 / 6개 = 40분)
+
+    const cellCount = totalSeconds / SECONDS_PER_CELL
+    const fullCells = Math.floor(cellCount)
+    const partialValue = cellCount % 1
 
     const cells = []
 
-    if (pomCount === 0) {
-      cells.push(
-        <div
-          key="empty"
-          className="bg-zinc-800 aspect-square"
-        />
-      )
-    } else {
-      for (let i = 0; i < fullCells; i++) {
+    for (let i = 0; i < MAX_CELLS; i++) {
+      if (i < fullCells) {
         cells.push(
           <div
-            key={`full-${i}`}
+            key={i}
             className="bg-red-500 aspect-square"
             style={{ opacity: 1 }}
           />
         )
-      }
-
-      if (partialValue > 0) {
+      } else if (i === fullCells && partialValue > 0) {
         cells.push(
           <div
-            key="partial"
+            key={i}
             className="bg-red-500 aspect-square"
             style={{ opacity: partialValue }}
+          />
+        )
+      } else {
+        cells.push(
+          <div
+            key={i}
+            className="bg-zinc-800 aspect-square"
           />
         )
       }

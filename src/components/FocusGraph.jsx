@@ -22,41 +22,53 @@ export const FocusGraph = () => {
     const partialValue = pomCount % 1
 
     const cells = []
-    for (let i = 0; i < fullCells; i++) {
+    
+    if (pomCount === 0) {
       cells.push(
         <div
-          key={`full-${i}`}
-          className="bg-red-500 aspect-square"
-          style={{ opacity: 1 }}
+          key="empty"
+          className="bg-zinc-800 aspect-square"
         />
       )
-    }
+    } else {
+      for (let i = 0; i < fullCells; i++) {
+        cells.push(
+          <div
+            key={`full-${i}`}
+            className="bg-red-500 aspect-square"
+            style={{ opacity: 1 }}
+          />
+        )
+      }
 
-    if (partialValue > 0) {
-      cells.push(
-        <div
-          key="partial"
-          className="bg-red-500 aspect-square"
-          style={{ opacity: partialValue }}
-        />
-      )
+      if (partialValue > 0) {
+        cells.push(
+          <div
+            key="partial"
+            className="bg-red-500 aspect-square"
+            style={{ opacity: partialValue }}
+          />
+        )
+      }
     }
 
     return cells
   }
 
   return (
-    <div className="w-full mb-6">
+    <div className="w-full mb-6 px-6">
       <div className="flex gap-0.5">
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
           <div
             key={day}
-            className="flex flex-col-reverse gap-0.5"
+            className="flex flex-col gap-0.5"
             style={{ width: `calc((100% / ${daysInMonth}) - 2px)` }}
           >
-            {renderDayColumn(day)}
-            <div className="text-xs text-zinc-500 text-center mt-1">
+            <div className="text-xs text-zinc-500 text-center mb-1">
               {day}
+            </div>
+            <div className="flex flex-col-reverse gap-0.5">
+              {renderDayColumn(day)}
             </div>
           </div>
         ))}

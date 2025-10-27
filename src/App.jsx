@@ -153,7 +153,7 @@ function App() {
           />
         </div>
 
-        <FocusGraph />
+        {timerState !== 'running' && <FocusGraph />}
 
         <TodoList
           todos={todos}

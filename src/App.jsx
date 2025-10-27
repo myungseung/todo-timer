@@ -54,6 +54,12 @@ function App() {
         return
       }
 
+      if (e.metaKey && e.key === 'u') {
+        e.preventDefault()
+        handleUpdate()
+        return
+      }
+
       if (e.key === 'Escape') {
         e.preventDefault()
         if (timerState === 'running') {
@@ -133,12 +139,6 @@ function App() {
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 p-6 overflow-y-auto flex flex-col">
       <div className="max-w-[800px] mx-auto flex-1 flex flex-col w-full">
-        <button
-          onClick={handleUpdate}
-          className="mb-4 px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded transition-colors self-end"
-        >
-          업데이트
-        </button>
         <div className={`transition-all duration-150 ease-in-out overflow-hidden ${
           isTimerVisible
             ? 'flex-1 opacity-100 mb-6'

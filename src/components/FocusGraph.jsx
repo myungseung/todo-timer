@@ -22,7 +22,7 @@ export const FocusGraph = () => {
     const partialValue = pomCount % 1
 
     const cells = []
-    
+
     if (pomCount === 0) {
       cells.push(
         <div
@@ -64,11 +64,11 @@ export const FocusGraph = () => {
             className="flex flex-col gap-0.5"
             style={{ width: `calc((100% / ${daysInMonth}) - 2px)` }}
           >
-            <div className="text-xs text-zinc-500 text-center mb-1">
-              {day}
-            </div>
             <div className="flex flex-col-reverse gap-0.5">
               {renderDayColumn(day)}
+            </div>
+            <div className="text-xs text-zinc-500 text-center mt-1">
+              {day}
             </div>
           </div>
         ))}

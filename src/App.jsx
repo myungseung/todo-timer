@@ -4,7 +4,12 @@ import { TodoList } from './components/TodoList'
 import { useTimer } from './hooks/useTimer'
 import { useTodos } from './hooks/useTodos'
 
+const APP_VERSION = __APP_VERSION__
+
 function App() {
+  useEffect(() => {
+    document.title = `Daily Time Tracker v${APP_VERSION}`
+  }, [])
   const [, forceUpdate] = useState(0)
   const {
     todos,
@@ -112,9 +117,28 @@ function App() {
 
   const isTimerVisible = timerState === 'running'
 
+  const handleUpdate = async () => {
+    console.log('🔘 [UI] 업데이트 버튼 클릭됨')
+
+    if (!window.__updateSW) {
+      console.error('❌ [UI] updateSW 함수를 찾을 수 없습니다')
+      return
+    }
+
+    console.log('📡 [UI] 업데이트 함수 호출 시작')
+    await window.__updateSW(true)
+    console.log('✅ [UI] 업데이트 함수 호출 완료')
+  }
+
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 p-6 overflow-y-auto flex flex-col">
       <div className="max-w-[800px] mx-auto flex-1 flex flex-col w-full">
+        <button
+          onClick={handleUpdate}
+          className="mb-4 px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded transition-colors self-end"
+        >
+          업데이트
+        </button>
         <div className={`transition-all duration-150 ease-in-out overflow-hidden ${
           isTimerVisible
             ? 'flex-1 opacity-100 mb-6'

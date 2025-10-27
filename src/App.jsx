@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Timer } from './components/Timer'
 import { TodoList } from './components/TodoList'
+import { FocusGraph } from './components/FocusGraph'
 import { useTimer } from './hooks/useTimer'
 import { useTodos } from './hooks/useTodos'
 
@@ -151,6 +152,8 @@ function App() {
             timerDisplay={getTimerDisplay()}
           />
         </div>
+
+        <FocusGraph />
 
         <TodoList
           todos={todos}

@@ -33,6 +33,26 @@ export const storage = {
     a.download = `todo-timer-${getTodayKey()}.json`
     a.click()
     URL.revokeObjectURL(url)
+  },
+
+  getMonthFocusData(year, month) {
+    const data = this.getData()
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const result = {}
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const dayData = data[dateKey]
+
+      if (dayData?.todos) {
+        const totalTimeSpent = dayData.todos.reduce((sum, todo) => sum + (todo.timeSpent || 0), 0)
+        result[day] = totalTimeSpent
+      } else {
+        result[day] = 0
+      }
+    }
+
+    return result
   }
 }
 

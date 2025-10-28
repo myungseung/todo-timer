@@ -16,6 +16,8 @@ function App() {
     todos,
     focusedIndex,
     setFocusedIndex,
+    selectedDate,
+    changeDate,
     addTodo,
     deleteTodo,
     toggleTodo,
@@ -23,11 +25,11 @@ function App() {
     updateTodoLevel,
     updateTodoLevels,
     updateTodoTimeSpent,
+    setTodoTimeSpent,
     getStats
   } = useTodos()
 
   const {
-    timerSeconds,
     timerState,
     currentTodoId,
     startTimer,
@@ -104,7 +106,12 @@ function App() {
     if (!todo || todo.completed) return
 
     if (timerState === 'stopped') {
-      startTimer(todo.id, todo.timeSpent || 0)
+      // 현재 시간을 항상 최신 값으로 가져오는 함수
+      const getCurrentTimeSpent = () => {
+        const currentTodo = todos.find(t => t.id === todo.id)
+        return currentTodo?.timeSpent || 0
+      }
+      startTimer(todo.id, todo.timeSpent || 0, getCurrentTimeSpent)
     } else if (timerState === 'running' && currentTodoId === todo.id) {
       stopTimer()
     }
@@ -137,6 +144,7 @@ function App() {
     console.log('✅ [UI] 업데이트 함수 호출 완료')
   }
 
+
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 p-6 overflow-y-auto flex flex-col">
       <div className="max-w-[800px] mx-auto flex-1 flex flex-col w-full">
@@ -146,14 +154,13 @@ function App() {
             : 'flex-[0] min-h-0 max-h-0 opacity-0 mb-0'
         }`}>
           <Timer
-            timerSeconds={timerSeconds}
             isRunning={timerState === 'running'}
             timerRatios={getTimerRatios()}
             timerDisplay={getTimerDisplay()}
           />
         </div>
 
-        {timerState !== 'running' && <FocusGraph />}
+        {timerState !== 'running' && <FocusGraph onDateClick={changeDate} selectedDate={selectedDate} />}
 
         <TodoList
           todos={todos}
@@ -168,6 +175,7 @@ function App() {
           onUpdateLevels={updateTodoLevels}
           onAddTodo={addTodo}
           onDeleteTodo={deleteTodo}
+          onSetTimeSpent={setTodoTimeSpent}
         />
       </div>
     </div>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { storage } from '../utils/storage'
 
-export const FocusGraph = () => {
+export const FocusGraph = ({ onDateClick, selectedDate }) => {
   const [monthData, setMonthData] = useState({})
   const [daysInMonth, setDaysInMonth] = useState(31)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [currentYear, setCurrentYear] = useState(null)
+  const [currentMonth, setCurrentMonth] = useState(null)
 
   useEffect(() => {
     const now = new Date()
@@ -11,14 +14,43 @@ export const FocusGraph = () => {
     const month = now.getMonth() + 1
     const days = new Date(year, month, 0).getDate()
 
+    setCurrentYear(year)
+    setCurrentMonth(month)
     setDaysInMonth(days)
-    setMonthData(storage.getMonthFocusData(year, month))
   }, [])
+
+  useEffect(() => {
+    if (currentYear && currentMonth) {
+      setMonthData(storage.getMonthFocusData(currentYear, currentMonth))
+    }
+  }, [currentYear, currentMonth, selectedDate, refreshKey])
+
+  // storage 변경 감지를 위한 폴링
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1)
+    }, 2000) // 2초마다 체크
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const isSelectedDate = (day) => {
+    if (!selectedDate || !currentYear || !currentMonth) return false
+    const dateKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return selectedDate === dateKey
+  }
+
+  const handleDateClick = (day) => {
+    if (onDateClick) {
+      const dateKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      onDateClick(dateKey)
+    }
+  }
 
   const renderDayColumn = (day) => {
     const totalSeconds = monthData[day] || 0
     const MAX_CELLS = 6
-    const SECONDS_PER_CELL = 2400 // 40분 = 2400초 (4시간 / 6개 = 40분)
+    const SECONDS_PER_CELL = 6000 // 100분 = 2 pom (6000초)
 
     const cellCount = totalSeconds / SECONDS_PER_CELL
     const fullCells = Math.floor(cellCount)
@@ -59,20 +91,29 @@ export const FocusGraph = () => {
   return (
     <div className="w-full mb-6 px-6">
       <div className="flex gap-0.5">
-        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
-          <div
-            key={day}
-            className="flex flex-col gap-0.5"
-            style={{ width: `calc((100% / ${daysInMonth}) - 2px)` }}
-          >
-            <div className="flex flex-col-reverse gap-0.5">
-              {renderDayColumn(day)}
+        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+          const selected = isSelectedDate(day)
+          return (
+            <div
+              key={day}
+              className="flex flex-col gap-0.5 cursor-pointer hover:opacity-80 transition-opacity"
+              style={{ width: `calc((100% / ${daysInMonth}) - 2px)` }}
+              onClick={() => handleDateClick(day)}
+            >
+              <div className="flex flex-col-reverse gap-0.5 border-2 border-transparent"
+                style={{
+                  borderColor: selected ? '#ef4444' : 'transparent',
+                  borderRadius: '4px'
+                }}
+              >
+                {renderDayColumn(day)}
+              </div>
+              <div className={`text-xs text-center mt-1 ${selected ? 'text-red-500 font-semibold' : 'text-zinc-500'}`}>
+                {day}
+              </div>
             </div>
-            <div className="text-xs text-zinc-500 text-center mt-1">
-              {day}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

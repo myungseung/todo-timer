@@ -4,23 +4,36 @@ import './index.css'
 import App from './App.jsx'
 import { registerSW } from 'virtual:pwa-register'
 
-const updateSW = registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    console.log('✅ [PWA] 새 버전 발견! 업데이트 가능')
-  },
-  onOfflineReady() {
-    console.log('📱 [PWA] 오프라인 모드 준비 완료')
-  },
-  onRegistered(registration) {
-    console.log('🔄 [PWA] Service Worker 등록 완료', registration)
-  },
-  onRegisterError(error) {
-    console.error('❌ [PWA] Service Worker 등록 실패:', error)
-  }
-})
+// 개발 환경에서는 SW 비활성화
+const isDev = import.meta.env.DEV
+let updateSW = null
+
+if (!isDev) {
+  updateSW = registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      console.log('✅ [PWA] 새 버전 발견! 업데이트 가능')
+    },
+    onOfflineReady() {
+      console.log('📱 [PWA] 오프라인 모드 준비 완료')
+    },
+    onRegistered(registration) {
+      console.log('🔄 [PWA] Service Worker 등록 완료', registration)
+    },
+    onRegisterError(error) {
+      console.error('❌ [PWA] Service Worker 등록 실패:', error)
+    }
+  })
+} else {
+  console.log('🔧 [DEV] Service Worker는 개발 모드에서 비활성화됨')
+}
 
 window.__updateSW = async (reloadPage = true) => {
+  if (isDev) {
+    console.log('🔧 [DEV] 개발 모드에서는 업데이트 불가')
+    return
+  }
+
   console.log('🔍 [PWA] 업데이트 버튼 클릭 - 서버 확인 시작...')
 
   try {

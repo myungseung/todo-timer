@@ -12,11 +12,15 @@ export const TodoList = ({
   onUpdateLevel,
   onUpdateLevels,
   onAddTodo,
-  onDeleteTodo
+  onDeleteTodo,
+  onSetTimeSpent
 }) => {
   const inputRefs = useRef({})
   const isComposingRef = useRef(false)
   const [selectedTodos, setSelectedTodos] = useState(new Set())
+  const [editingTimeId, setEditingTimeId] = useState(null)
+  const [editTimeValue, setEditTimeValue] = useState('')
+  const timeInputRefs = useRef({})
   const stats = getStats()
 
   useEffect(() => {
@@ -187,10 +191,51 @@ export const TodoList = ({
                 onFocus={() => setFocusedIndex(index)}
               />
               {todo.timeSpent > 0 && (
-                <div className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0">
-                  <span>{Math.floor(todo.timeSpent / 60)}:{(todo.timeSpent % 60).toString().padStart(2, '0')}</span>
-                  <span className="text-zinc-500">🍅{(Math.round((todo.timeSpent / (50 * 60)) * 10) / 10).toFixed(1)}</span>
-                </div>
+                <>
+                  {editingTimeId === todo.id ? (
+                    <div className="flex items-center gap-1.5 bg-zinc-950 border border-red-500 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0">
+                      <input
+                        ref={el => timeInputRefs.current[todo.id] = el}
+                        type="text"
+                        value={editTimeValue}
+                        onChange={(e) => setEditTimeValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const seconds = parseInt(editTimeValue) || 0
+                            onSetTimeSpent(todo.id, seconds)
+                            setEditingTimeId(null)
+                            setEditTimeValue('')
+                          }
+                          if (e.key === 'Escape') {
+                            setEditingTimeId(null)
+                            setEditTimeValue('')
+                          }
+                        }}
+                        onBlur={() => {
+                          const seconds = parseInt(editTimeValue) || 0
+                          onSetTimeSpent(todo.id, seconds)
+                          setEditingTimeId(null)
+                          setEditTimeValue('')
+                        }}
+                        className="bg-transparent border-none outline-none text-zinc-50 w-16"
+                        placeholder="초"
+                        autoFocus
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingTimeId(todo.id)
+                        setEditTimeValue(todo.timeSpent.toString())
+                      }}
+                      className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-md px-2 py-0.5 text-[13px] text-zinc-400 whitespace-nowrap tabular-nums flex-shrink-0 cursor-pointer hover:border-zinc-700"
+                    >
+                      <span>{Math.floor(todo.timeSpent / 60)}:{(todo.timeSpent % 60).toString().padStart(2, '0')}</span>
+                      <span className="text-zinc-500">🍅{(Math.round((todo.timeSpent / (50 * 60)) * 10) / 10).toFixed(1)}</span>
+                    </div>
+                  )}
+                </>
               )}
             </li>
           )

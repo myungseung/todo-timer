@@ -24,6 +24,13 @@ export const storage = {
     this.saveData(data)
   },
 
+  saveTodosByDate(dateKey, todos) {
+    const data = this.getData()
+    if (!data[dateKey]) data[dateKey] = {}
+    data[dateKey].todos = todos
+    this.saveData(data)
+  },
+
   exportToFile() {
     const data = this.getData()
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })

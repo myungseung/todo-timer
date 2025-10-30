@@ -24,6 +24,16 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     }
   }, [])
 
+  // 50분 초과 시 50분으로 재시작
+  useEffect(() => {
+    if (timerSeconds <= 0 && timerState === 'running') {
+      setTimerSeconds(INITIAL_TIMER_SECONDS)
+      const now = Date.now()
+      startTimeRef.current = now
+      lastUpdateTimeRef.current = now
+    }
+  }, [timerSeconds, timerState])
+
   const startTimer = (todoId, existingTimeSpent = 0) => {
     // 50분 초과분을 계산하여 초기 타이머 설정
     const timeInCurrentCycle = existingTimeSpent % INITIAL_TIMER_SECONDS

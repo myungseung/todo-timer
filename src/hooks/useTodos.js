@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react'
 import { storage } from '../utils/storage'
 
+const getDateKey = (date) => date.toISOString().split('T')[0]
+
 export const useTodos = () => {
   const [todos, setTodos] = useState([])
   const [focusedIndex, setFocusedIndex] = useState(0)
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
+  // 날짜 변경 시 해당 날짜의 데이터 로드
   useEffect(() => {
-    const loadedTodos = storage.getTodayTodos()
-    setTodos(loadedTodos)
+    const dateKey = getDateKey(selectedDate)
+    const data = storage.getData()
+    const loadedTodos = data[dateKey]?.todos || []
 
-    if (loadedTodos.length === 0) {
+    if (loadedTodos.length === 0 && dateKey === getDateKey(new Date())) {
+      // 오늘 날짜만 빈 todo 생성
       const todo = {
         id: Date.now(),
         text: '',
@@ -18,14 +24,17 @@ export const useTodos = () => {
         timeSpent: 0
       }
       setTodos([todo])
+    } else {
+      setTodos(loadedTodos)
     }
-  }, [])
+  }, [selectedDate])
 
   useEffect(() => {
     if (todos.length > 0) {
-      storage.saveTodayTodos(todos)
+      const dateKey = getDateKey(selectedDate)
+      storage.saveTodosByDate(dateKey, todos)
     }
-  }, [todos])
+  }, [todos, selectedDate])
 
   const addTodo = (afterId, level, insertBefore = false) => {
     const todo = {
@@ -113,6 +122,12 @@ export const useTodos = () => {
     ))
   }
 
+  const setTodoTimeSpent = (id, seconds) => {
+    setTodos(prev => prev.map(t =>
+      t.id === id ? { ...t, timeSpent: Math.max(0, Math.floor(seconds)) } : t
+    ))
+  }
+
   const getStats = () => {
     const totalTimeSpent = todos.reduce((sum, t) => sum + (t.timeSpent || 0), 0)
     const hours = Math.floor(totalTimeSpent / 3600)
@@ -124,10 +139,16 @@ export const useTodos = () => {
     return { hours, mins, totalPom }
   }
 
+  const changeDate = (date) => {
+    setSelectedDate(date)
+  }
+
   return {
     todos,
     focusedIndex,
     setFocusedIndex,
+    selectedDate,
+    changeDate,
     addTodo,
     deleteTodo,
     toggleTodo,
@@ -135,6 +156,7 @@ export const useTodos = () => {
     updateTodoLevel,
     updateTodoLevels,
     updateTodoTimeSpent,
+    setTodoTimeSpent,
     getStats
   }
 }

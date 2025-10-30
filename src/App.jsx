@@ -30,7 +30,6 @@ function App() {
   } = useTodos()
 
   const {
-    timerSeconds,
     timerState,
     currentTodoId,
     startTimer,
@@ -107,7 +106,12 @@ function App() {
     if (!todo || todo.completed) return
 
     if (timerState === 'stopped') {
-      startTimer(todo.id, todo.timeSpent || 0)
+      // 현재 시간을 항상 최신 값으로 가져오는 함수
+      const getCurrentTimeSpent = () => {
+        const currentTodo = todos.find(t => t.id === todo.id)
+        return currentTodo?.timeSpent || 0
+      }
+      startTimer(todo.id, todo.timeSpent || 0, getCurrentTimeSpent)
     } else if (timerState === 'running' && currentTodoId === todo.id) {
       stopTimer()
     }
@@ -150,7 +154,6 @@ function App() {
             : 'flex-[0] min-h-0 max-h-0 opacity-0 mb-0'
         }`}>
           <Timer
-            timerSeconds={timerSeconds}
             isRunning={timerState === 'running'}
             timerRatios={getTimerRatios()}
             timerDisplay={getTimerDisplay()}

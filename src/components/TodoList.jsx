@@ -121,7 +121,7 @@ export const TodoList = ({
         isCompact ? 'hidden' : 'flex'
       }`}>
         <div className="flex gap-1.5 items-center">
-          <span>총 소요 시간</span>
+          <span>Total Time</span>
           <span className="font-semibold text-zinc-400 tabular-nums">{stats.hours}h {stats.mins}m</span>
         </div>
         <div className="flex gap-1.5 items-center ml-auto">
@@ -218,7 +218,7 @@ export const TodoList = ({
                           setEditTimeValue('')
                         }}
                         className="bg-transparent border-none outline-none text-zinc-50 w-16"
-                        placeholder="초"
+                        placeholder="sec"
                         autoFocus
                       />
                     </div>

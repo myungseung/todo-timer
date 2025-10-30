@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export const Timer = ({ timerSeconds, isRunning, timerRatios, timerDisplay }) => {
+export const Timer = ({ isRunning, timerRatios, timerDisplay }) => {
   const ticksContainerRef = useRef(null)
 
   useEffect(() => {

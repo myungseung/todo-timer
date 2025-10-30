@@ -6,15 +6,14 @@ const getDateKey = (date) => date.toISOString().split('T')[0]
 export const useTodos = () => {
   const [todos, setTodos] = useState([])
   const [focusedIndex, setFocusedIndex] = useState(0)
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(() => getDateKey(new Date()))
 
   // 날짜 변경 시 해당 날짜의 데이터 로드
   useEffect(() => {
-    const dateKey = getDateKey(selectedDate)
     const data = storage.getData()
-    const loadedTodos = data[dateKey]?.todos || []
+    const loadedTodos = data[selectedDate]?.todos || []
 
-    if (loadedTodos.length === 0 && dateKey === getDateKey(new Date())) {
+    if (loadedTodos.length === 0 && selectedDate === new Date().toISOString().split('T')[0]) {
       // 오늘 날짜만 빈 todo 생성
       const todo = {
         id: Date.now(),
@@ -31,8 +30,7 @@ export const useTodos = () => {
 
   useEffect(() => {
     if (todos.length > 0) {
-      const dateKey = getDateKey(selectedDate)
-      storage.saveTodosByDate(dateKey, todos)
+      storage.saveTodosByDate(selectedDate, todos)
     }
   }, [todos, selectedDate])
 
@@ -139,8 +137,8 @@ export const useTodos = () => {
     return { hours, mins, totalPom }
   }
 
-  const changeDate = (date) => {
-    setSelectedDate(date)
+  const changeDate = (dateKey) => {
+    setSelectedDate(dateKey)
   }
 
   return {

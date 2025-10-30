@@ -3,10 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 const INITIAL_TIMER_SECONDS = 50 * 60
 
 export const useTimer = ({ onTodoTimeUpdate }) => {
-  const [timerSeconds, setTimerSeconds] = useState(INITIAL_TIMER_SECONDS)
   const [timerState, setTimerState] = useState('stopped')
   const [currentTodoId, setCurrentTodoId] = useState(null)
-  const [initialTimeSpent, setInitialTimeSpent] = useState(0)
+  const [currentTimeSpent, setCurrentTimeSpent] = useState(0)
   const timerIntervalRef = useRef(null)
   const onTodoTimeUpdateRef = useRef(onTodoTimeUpdate)
   const startTimeRef = useRef(null)
@@ -24,29 +23,24 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     }
   }, [])
 
-  // 50분 초과 시 50분으로 재시작
-  useEffect(() => {
-    if (timerSeconds <= 0 && timerState === 'running') {
-      setTimerSeconds(INITIAL_TIMER_SECONDS)
-      const now = Date.now()
-      startTimeRef.current = now
-      lastUpdateTimeRef.current = now
+  const startTimer = (todoId, existingTimeSpent = 0, getCurrentTimeSpent) => {
+    // 기존 interval 정리
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
     }
-  }, [timerSeconds, timerState])
-
-  const startTimer = (todoId, existingTimeSpent = 0) => {
-    // 50분 초과분을 계산하여 초기 타이머 설정
-    const timeInCurrentCycle = existingTimeSpent % INITIAL_TIMER_SECONDS
-    const remainingSeconds = INITIAL_TIMER_SECONDS - timeInCurrentCycle
 
     setCurrentTodoId(todoId)
-    setTimerSeconds(remainingSeconds)
-    setInitialTimeSpent(existingTimeSpent)
     setTimerState('running')
+    setCurrentTimeSpent(existingTimeSpent)
 
     const now = Date.now()
     startTimeRef.current = now
     lastUpdateTimeRef.current = now
+
+    // getCurrentTimeSpent를 통해 최신 값을 가져오는 함수
+    const getLatestTimeSpent = () => {
+      return getCurrentTimeSpent ? getCurrentTimeSpent() : existingTimeSpent
+    }
 
     timerIntervalRef.current = setInterval(() => {
       const currentTime = Date.now()
@@ -55,10 +49,13 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
       if (elapsedSeconds > 0) {
         onTodoTimeUpdateRef.current(todoId, elapsedSeconds)
         lastUpdateTimeRef.current = currentTime
-      }
 
-      const totalElapsed = Math.floor((currentTime - startTimeRef.current) / 1000)
-      setTimerSeconds(remainingSeconds - totalElapsed)
+        // 실시간으로 현재 timeSpent 계산
+        const baseTimeSpent = getLatestTimeSpent()
+        const totalElapsed = Math.floor((currentTime - startTimeRef.current) / 1000)
+        const newTimeSpent = baseTimeSpent + totalElapsed
+        setCurrentTimeSpent(newTimeSpent)
+      }
     }, 1000)
   }
 
@@ -71,26 +68,32 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     setTimerState('stopped')
   }
 
+  const getRemainingTime = (spentTime) => {
+    const nextMilestone = Math.ceil(spentTime / INITIAL_TIMER_SECONDS) * INITIAL_TIMER_SECONDS
+    return nextMilestone - spentTime
+  }
+
   const getTimerDisplay = () => {
-    const mins = Math.floor(timerSeconds / 60)
-    const secs = timerSeconds % 60
+    const remainingSeconds = getRemainingTime(currentTimeSpent)
+
+    const mins = Math.floor(remainingSeconds / 60)
+    const secs = remainingSeconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const getTimerRatios = () => {
+    const remainingSeconds = getRemainingTime(currentTimeSpent)
+    const elapsedInCycle = INITIAL_TIMER_SECONDS - remainingSeconds
     const FULL_CIRCLE_SECONDS = 60 * 60
-    // 현재 사이클에서의 총 경과 시간
-    const totalElapsedInCycle = INITIAL_TIMER_SECONDS - timerSeconds
 
     const backgroundRatio = (10 * 60) / FULL_CIRCLE_SECONDS
-    const elapsedRatio = totalElapsedInCycle / FULL_CIRCLE_SECONDS
-    const remainingRatio = timerSeconds / FULL_CIRCLE_SECONDS
+    const elapsedRatio = elapsedInCycle / FULL_CIRCLE_SECONDS
+    const remainingRatio = remainingSeconds / FULL_CIRCLE_SECONDS
 
     return { backgroundRatio, elapsedRatio, remainingRatio }
   }
 
   return {
-    timerSeconds,
     timerState,
     currentTodoId,
     startTimer,

@@ -4,6 +4,7 @@ import { storage } from '../utils/storage'
 export const FocusGraph = ({ onDateClick, selectedDate }) => {
   const [monthData, setMonthData] = useState({})
   const [daysInMonth, setDaysInMonth] = useState(31)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [currentYear, setCurrentYear] = useState(null)
   const [currentMonth, setCurrentMonth] = useState(null)
 
@@ -16,26 +17,40 @@ export const FocusGraph = ({ onDateClick, selectedDate }) => {
     setCurrentYear(year)
     setCurrentMonth(month)
     setDaysInMonth(days)
-    setMonthData(storage.getMonthFocusData(year, month))
+  }, [])
+
+  useEffect(() => {
+    if (currentYear && currentMonth) {
+      setMonthData(storage.getMonthFocusData(currentYear, currentMonth))
+    }
+  }, [currentYear, currentMonth, selectedDate, refreshKey])
+
+  // storage 변경 감지를 위한 폴링
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1)
+    }, 2000) // 2초마다 체크
+
+    return () => clearInterval(interval)
   }, [])
 
   const isSelectedDate = (day) => {
     if (!selectedDate || !currentYear || !currentMonth) return false
     const dateKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return selectedDate.toISOString().split('T')[0] === dateKey
+    return selectedDate === dateKey
   }
 
   const handleDateClick = (day) => {
     if (onDateClick) {
-      const date = new Date(currentYear, currentMonth - 1, day)
-      onDateClick(date)
+      const dateKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      onDateClick(dateKey)
     }
   }
 
   const renderDayColumn = (day) => {
     const totalSeconds = monthData[day] || 0
     const MAX_CELLS = 6
-    const SECONDS_PER_CELL = 2400 // 40분 = 2400초 (4시간 / 6개 = 40분)
+    const SECONDS_PER_CELL = 6000 // 100분 = 2 pom (6000초)
 
     const cellCount = totalSeconds / SECONDS_PER_CELL
     const fullCells = Math.floor(cellCount)

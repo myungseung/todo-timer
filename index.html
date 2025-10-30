@@ -20,5 +20,47 @@
       });
     }
   </script>
+  <!--Tawk.to Dynamic Loader-->
+  <script type="text/javascript">
+    window.loadTawkTo = function() {
+      if (window.Tawk_API) {
+        window.Tawk_API.toggle();
+        return;
+      }
+
+      var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+      window.Tawk_API = Tawk_API;
+
+      Tawk_API.customStyle = {
+        visibility: {
+          desktop: { position: 'br', xOffset: 20, yOffset: 20 },
+          mobile: { position: 'br', xOffset: 10, yOffset: 10 }
+        }
+      };
+
+      Tawk_API.onLoad = function(){
+        Tawk_API.hideWidget();
+        Tawk_API.maximize();
+
+        var style = document.createElement('style');
+        style.innerHTML = `
+          iframe[title*="chat widget"] { display: none !important; }
+          .tawk-min-container { display: none !important; visibility: hidden !important; }
+          .tawk-bubble-container { display: none !important; visibility: hidden !important; }
+          div[id*="tawk"] { display: none !important; visibility: hidden !important; }
+          .tawk-button-circle { display: none !important; }
+        `;
+        document.head.appendChild(style);
+      };
+
+      var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+      s1.async = true;
+      s1.src = 'https://embed.tawk.to/6902c48ea00437194fc24514/1j8pcvjmb';
+      s1.charset = 'UTF-8';
+      s1.setAttribute('crossorigin', '*');
+      s0.parentNode.insertBefore(s1, s0);
+    };
+  </script>
+  <!--End of Tawk.to Dynamic Loader-->
 </body>
 </html>

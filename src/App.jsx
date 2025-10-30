@@ -16,6 +16,8 @@ function App() {
     todos,
     focusedIndex,
     setFocusedIndex,
+    selectedDate,
+    changeDate,
     addTodo,
     deleteTodo,
     toggleTodo,
@@ -23,6 +25,7 @@ function App() {
     updateTodoLevel,
     updateTodoLevels,
     updateTodoTimeSpent,
+    setTodoTimeSpent,
     getStats
   } = useTodos()
 
@@ -137,6 +140,7 @@ function App() {
     console.log('✅ [UI] 업데이트 함수 호출 완료')
   }
 
+
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 p-6 overflow-y-auto flex flex-col">
       <div className="max-w-[800px] mx-auto flex-1 flex flex-col w-full">
@@ -153,7 +157,7 @@ function App() {
           />
         </div>
 
-        {timerState !== 'running' && <FocusGraph />}
+        {timerState !== 'running' && <FocusGraph onDateClick={changeDate} selectedDate={selectedDate} />}
 
         <TodoList
           todos={todos}
@@ -168,7 +172,30 @@ function App() {
           onUpdateLevels={updateTodoLevels}
           onAddTodo={addTodo}
           onDeleteTodo={deleteTodo}
+          onSetTimeSpent={setTodoTimeSpent}
         />
+
+        <div className="mt-3 flex items-center justify-center gap-2 text-[11px] text-zinc-500">
+          <a
+            href="https://www.producthunt.com/products/pom-shit-done"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-zinc-400 transition-colors duration-150"
+          >
+            Product Hunt
+          </a>
+          <span>|</span>
+          <button
+            onClick={() => {
+              if (window.loadTawkTo) {
+                window.loadTawkTo()
+              }
+            }}
+            className="hover:text-zinc-400 transition-colors duration-150"
+          >
+            Feedback
+          </button>
+        </div>
       </div>
     </div>
   )

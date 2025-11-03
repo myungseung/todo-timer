@@ -16,7 +16,13 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
   }, [onTodoTimeUpdate])
 
   useEffect(() => {
+    console.log('⏱️ [Timer] useTimer hook 마운트됨', { timestamp: new Date().toISOString() })
+
     return () => {
+      console.log('🔥 [Timer] useTimer hook 언마운트됨', {
+        hadActiveInterval: !!timerIntervalRef.current,
+        timestamp: new Date().toISOString()
+      })
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
@@ -24,8 +30,16 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
   }, [])
 
   const startTimer = (todoId, existingTimeSpent = 0, getCurrentTimeSpent) => {
+    console.log('▶️ [Timer] 타이머 시작 요청', {
+      todoId,
+      existingTimeSpent,
+      hasGetCurrentTimeSpent: !!getCurrentTimeSpent,
+      timestamp: new Date().toISOString()
+    })
+
     // 기존 interval 정리
     if (timerIntervalRef.current) {
+      console.log('⚠️ [Timer] 기존 interval 정리', { timestamp: new Date().toISOString() })
       clearInterval(timerIntervalRef.current)
     }
 
@@ -42,9 +56,19 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
       return getCurrentTimeSpent ? getCurrentTimeSpent() : existingTimeSpent
     }
 
+    let tickCount = 0
     timerIntervalRef.current = setInterval(() => {
+      tickCount++
       const currentTime = Date.now()
       const elapsedSeconds = Math.floor((currentTime - lastUpdateTimeRef.current) / 1000)
+
+      if (tickCount % 60 === 0) {
+        console.log(`⏲️ [Timer] 1분 경과 (${tickCount}초)`, {
+          todoId,
+          elapsedSeconds,
+          timestamp: new Date().toISOString()
+        })
+      }
 
       if (elapsedSeconds > 0) {
         onTodoTimeUpdateRef.current(todoId, elapsedSeconds)
@@ -57,15 +81,29 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
         setCurrentTimeSpent(newTimeSpent)
       }
     }, 1000)
+
+    console.log('✅ [Timer] 타이머 시작됨', {
+      intervalId: timerIntervalRef.current,
+      timestamp: new Date().toISOString()
+    })
   }
 
   const stopTimer = () => {
+    console.log('⏹️ [Timer] 타이머 정지 요청', {
+      hasInterval: !!timerIntervalRef.current,
+      currentTodoId,
+      currentTimeSpent,
+      timestamp: new Date().toISOString()
+    })
+
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
       timerIntervalRef.current = null
+      console.log('✅ [Timer] Interval 정리됨', { timestamp: new Date().toISOString() })
     }
 
     setTimerState('stopped')
+    console.log('✅ [Timer] 타이머 정지됨', { timestamp: new Date().toISOString() })
   }
 
   const getRemainingTime = (spentTime) => {

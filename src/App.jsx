@@ -10,6 +10,71 @@ const APP_VERSION = __APP_VERSION__
 function App() {
   useEffect(() => {
     document.title = `Daily Time Tracker v${APP_VERSION}`
+    console.log('🚀 [App] 마운트됨', { version: APP_VERSION, timestamp: new Date().toISOString() })
+
+    // 메모리 사용량 추적 (5분마다)
+    const memoryInterval = setInterval(() => {
+      if (performance.memory) {
+        console.log('💾 [Memory]', {
+          usedJSHeapSize: `${(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
+          totalJSHeapSize: `${(performance.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
+          jsHeapSizeLimit: `${(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
+          timestamp: new Date().toISOString()
+        })
+      }
+    }, 5 * 60 * 1000) // 5분마다
+
+    // Visibility change 추적
+    const handleVisibilityChange = () => {
+      console.log('👁️ [App] Visibility 변경:', {
+        hidden: document.hidden,
+        visibilityState: document.visibilityState,
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    // 페이지 언로드 이벤트
+    const handleBeforeUnload = () => {
+      console.log('⚠️ [App] beforeunload 이벤트', { timestamp: new Date().toISOString() })
+    }
+
+    const handlePageHide = (e) => {
+      console.log('👋 [App] pagehide 이벤트', {
+        persisted: e.persisted,
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    const handleUnload = () => {
+      console.log('💀 [App] unload 이벤트', { timestamp: new Date().toISOString() })
+    }
+
+    // 포커스 이벤트
+    const handleFocus = () => {
+      console.log('🎯 [App] 포커스 획득', { timestamp: new Date().toISOString() })
+    }
+
+    const handleBlur = () => {
+      console.log('😴 [App] 포커스 상실', { timestamp: new Date().toISOString() })
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('unload', handleUnload)
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+
+    return () => {
+      console.log('🔥 [App] 언마운트됨', { timestamp: new Date().toISOString() })
+      clearInterval(memoryInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('unload', handleUnload)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+    }
   }, [])
   const [, forceUpdate] = useState(0)
   const {
@@ -42,10 +107,19 @@ function App() {
 
   useEffect(() => {
     if (timerState === 'running') {
+      console.log('🔄 [App] forceUpdate interval 시작', { timestamp: new Date().toISOString() })
+      let tickCount = 0
       const interval = setInterval(() => {
+        tickCount++
         forceUpdate(prev => prev + 1)
+        if (tickCount % 60 === 0) {
+          console.log(`🔄 [App] forceUpdate 60회 실행됨 (${tickCount}회)`, { timestamp: new Date().toISOString() })
+        }
       }, 1000)
-      return () => clearInterval(interval)
+      return () => {
+        console.log('🔥 [App] forceUpdate interval 정리됨', { tickCount, timestamp: new Date().toISOString() })
+        clearInterval(interval)
+      }
     }
   }, [timerState])
 

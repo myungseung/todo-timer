@@ -5,28 +5,77 @@ import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 import { registerSW } from 'virtual:pwa-register'
 
+// 전역 에러 핸들러
+window.addEventListener('error', (event) => {
+  console.error('❌ [Global] Uncaught error:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error,
+    stack: event.error?.stack,
+    timestamp: new Date().toISOString()
+  })
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ [Global] Unhandled promise rejection:', {
+    reason: event.reason,
+    promise: event.promise,
+    timestamp: new Date().toISOString()
+  })
+})
+
 // 개발 환경에서는 SW 비활성화
 const isDev = import.meta.env.DEV
 let updateSW = null
 
 if (!isDev) {
+  console.log('🔧 [PWA] Service Worker 등록 시작', { timestamp: new Date().toISOString() })
+
   updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
-      console.log('✅ [PWA] 새 버전 발견! 업데이트 가능')
+      console.log('✅ [PWA] 새 버전 발견! 업데이트 가능', { timestamp: new Date().toISOString() })
     },
     onOfflineReady() {
-      console.log('📱 [PWA] 오프라인 모드 준비 완료')
+      console.log('📱 [PWA] 오프라인 모드 준비 완료', { timestamp: new Date().toISOString() })
     },
     onRegistered(registration) {
-      console.log('🔄 [PWA] Service Worker 등록 완료', registration)
+      console.log('🔄 [PWA] Service Worker 등록 완료', {
+        registration,
+        scope: registration?.scope,
+        active: !!registration?.active,
+        waiting: !!registration?.waiting,
+        installing: !!registration?.installing,
+        timestamp: new Date().toISOString()
+      })
     },
     onRegisterError(error) {
-      console.error('❌ [PWA] Service Worker 등록 실패:', error)
+      console.error('❌ [PWA] Service Worker 등록 실패:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
+      })
     }
   })
+
+  // Service Worker 상태 변화 추적
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('🔄 [PWA] Controller 변경됨 (새 SW 활성화됨)', { timestamp: new Date().toISOString() })
+    })
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      console.log('💬 [PWA] SW로부터 메시지 수신:', {
+        data: event.data,
+        timestamp: new Date().toISOString()
+      })
+    })
+  }
 } else {
-  console.log('🔧 [DEV] Service Worker는 개발 모드에서 비활성화됨')
+  console.log('🔧 [DEV] Service Worker는 개발 모드에서 비활성화됨', { timestamp: new Date().toISOString() })
 }
 
 window.__updateSW = async (reloadPage = true) => {

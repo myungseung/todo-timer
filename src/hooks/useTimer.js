@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { logTimerOnUnmount, logIntervalCleanupFailure, logTimerAbnormalStop } from '../utils/logger'
 
 const INITIAL_TIMER_SECONDS = 50 * 60
 
@@ -19,15 +20,41 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     console.log('⏱️ [Timer] useTimer hook 마운트됨', { timestamp: new Date().toISOString() })
 
     return () => {
+      const hadActiveInterval = !!timerIntervalRef.current
+      const wasRunning = timerState === 'running'
+
       console.log('🔥 [Timer] useTimer hook 언마운트됨', {
-        hadActiveInterval: !!timerIntervalRef.current,
+        hadActiveInterval,
+        wasRunning,
+        currentTodoId,
+        currentTimeSpent,
         timestamp: new Date().toISOString()
       })
+
+      // Crash case: 언마운트시 타이머가 실행 중이었는지 로깅
+      logTimerOnUnmount({
+        state: timerState,
+        todoId: currentTodoId,
+        timeSpent: currentTimeSpent,
+        hadActiveInterval
+      })
+
       if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
+        try {
+          clearInterval(timerIntervalRef.current)
+          timerIntervalRef.current = null
+        } catch (error) {
+          // Crash case: interval 정리 실패 로깅
+          logIntervalCleanupFailure({
+            state: timerState,
+            todoId: currentTodoId,
+            timeSpent: currentTimeSpent,
+            error: error.message
+          })
+        }
       }
     }
-  }, [])
+  }, [timerState, currentTodoId, currentTimeSpent])
 
   const startTimer = (todoId, existingTimeSpent = 0, getCurrentTimeSpent) => {
     console.log('▶️ [Timer] 타이머 시작 요청', {
@@ -40,7 +67,18 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     // 기존 interval 정리
     if (timerIntervalRef.current) {
       console.log('⚠️ [Timer] 기존 interval 정리', { timestamp: new Date().toISOString() })
-      clearInterval(timerIntervalRef.current)
+      try {
+        clearInterval(timerIntervalRef.current)
+      } catch (error) {
+        // Crash case: interval 정리 실패 로깅
+        logIntervalCleanupFailure({
+          state: timerState,
+          todoId: currentTodoId,
+          timeSpent: currentTimeSpent,
+          error: error.message,
+          context: 'startTimer'
+        })
+      }
     }
 
     setCurrentTodoId(todoId)
@@ -58,27 +96,39 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
 
     let tickCount = 0
     timerIntervalRef.current = setInterval(() => {
-      tickCount++
-      const currentTime = Date.now()
-      const elapsedSeconds = Math.floor((currentTime - lastUpdateTimeRef.current) / 1000)
+      try {
+        tickCount++
+        const currentTime = Date.now()
+        const elapsedSeconds = Math.floor((currentTime - lastUpdateTimeRef.current) / 1000)
 
-      if (tickCount % 60 === 0) {
-        console.log(`⏲️ [Timer] 1분 경과 (${tickCount}초)`, {
+        if (tickCount % 60 === 0) {
+          console.log(`⏲️ [Timer] 1분 경과 (${tickCount}초)`, {
+            todoId,
+            elapsedSeconds,
+            timestamp: new Date().toISOString()
+          })
+        }
+
+        if (elapsedSeconds > 0) {
+          onTodoTimeUpdateRef.current(todoId, elapsedSeconds)
+          lastUpdateTimeRef.current = currentTime
+
+          // 실시간으로 현재 timeSpent 계산
+          const baseTimeSpent = getLatestTimeSpent()
+          const totalElapsed = Math.floor((currentTime - startTimeRef.current) / 1000)
+          const newTimeSpent = baseTimeSpent + totalElapsed
+          setCurrentTimeSpent(newTimeSpent)
+        }
+      } catch (error) {
+        // Crash case: interval 콜백 실행 중 에러 발생
+        logTimerAbnormalStop('interval-callback-error', {
+          state: timerState,
           todoId,
-          elapsedSeconds,
-          timestamp: new Date().toISOString()
+          timeSpent: currentTimeSpent,
+          tickCount,
+          error: error.message,
+          errorStack: error.stack
         })
-      }
-
-      if (elapsedSeconds > 0) {
-        onTodoTimeUpdateRef.current(todoId, elapsedSeconds)
-        lastUpdateTimeRef.current = currentTime
-
-        // 실시간으로 현재 timeSpent 계산
-        const baseTimeSpent = getLatestTimeSpent()
-        const totalElapsed = Math.floor((currentTime - startTimeRef.current) / 1000)
-        const newTimeSpent = baseTimeSpent + totalElapsed
-        setCurrentTimeSpent(newTimeSpent)
       }
     }, 1000)
 
@@ -97,9 +147,27 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
     })
 
     if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-      timerIntervalRef.current = null
-      console.log('✅ [Timer] Interval 정리됨', { timestamp: new Date().toISOString() })
+      try {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+        console.log('✅ [Timer] Interval 정리됨', { timestamp: new Date().toISOString() })
+      } catch (error) {
+        // Crash case: interval 정리 실패 로깅
+        logIntervalCleanupFailure({
+          state: timerState,
+          todoId: currentTodoId,
+          timeSpent: currentTimeSpent,
+          error: error.message,
+          context: 'stopTimer'
+        })
+      }
+    } else if (timerState === 'running') {
+      // Crash case: 타이머가 running 상태인데 interval이 없는 경우
+      logTimerAbnormalStop('interval-missing-on-stop', {
+        state: timerState,
+        todoId: currentTodoId,
+        timeSpent: currentTimeSpent
+      })
     }
 
     setTimerState('stopped')

@@ -4,10 +4,11 @@ import './index.css'
 import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 import { registerSW } from 'virtual:pwa-register'
+import { logError } from './utils/logger'
 
 // 전역 에러 핸들러
 window.addEventListener('error', (event) => {
-  console.error('❌ [Global] Uncaught error:', {
+  const errorData = {
     message: event.message,
     filename: event.filename,
     lineno: event.lineno,
@@ -15,14 +16,38 @@ window.addEventListener('error', (event) => {
     error: event.error,
     stack: event.error?.stack,
     timestamp: new Date().toISOString()
+  }
+
+  console.error('❌ [Global] Uncaught error:', errorData)
+
+  // Vercel 로그로 전송
+  logError(event.error || new Error(event.message), {
+    type: 'global-error',
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    url: window.location.href
   })
 })
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('❌ [Global] Unhandled promise rejection:', {
+  const rejectionData = {
     reason: event.reason,
     promise: event.promise,
     timestamp: new Date().toISOString()
+  }
+
+  console.error('❌ [Global] Unhandled promise rejection:', rejectionData)
+
+  // Vercel 로그로 전송
+  const error = event.reason instanceof Error
+    ? event.reason
+    : new Error(String(event.reason))
+
+  logError(error, {
+    type: 'unhandled-rejection',
+    promise: String(event.promise),
+    url: window.location.href
   })
 })
 

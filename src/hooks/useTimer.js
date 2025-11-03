@@ -11,31 +11,42 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
   const onTodoTimeUpdateRef = useRef(onTodoTimeUpdate)
   const startTimeRef = useRef(null)
   const lastUpdateTimeRef = useRef(null)
+  // cleanup에서 최신 값에 접근하기 위한 ref
+  const timerStateRef = useRef(timerState)
+  const currentTodoIdRef = useRef(currentTodoId)
+  const currentTimeSpentRef = useRef(currentTimeSpent)
 
   useEffect(() => {
     onTodoTimeUpdateRef.current = onTodoTimeUpdate
   }, [onTodoTimeUpdate])
+
+  // ref 업데이트
+  useEffect(() => {
+    timerStateRef.current = timerState
+    currentTodoIdRef.current = currentTodoId
+    currentTimeSpentRef.current = currentTimeSpent
+  }, [timerState, currentTodoId, currentTimeSpent])
 
   useEffect(() => {
     console.log('⏱️ [Timer] useTimer hook 마운트됨', { timestamp: new Date().toISOString() })
 
     return () => {
       const hadActiveInterval = !!timerIntervalRef.current
-      const wasRunning = timerState === 'running'
+      const wasRunning = timerStateRef.current === 'running'
 
       console.log('🔥 [Timer] useTimer hook 언마운트됨', {
         hadActiveInterval,
         wasRunning,
-        currentTodoId,
-        currentTimeSpent,
+        currentTodoId: currentTodoIdRef.current,
+        currentTimeSpent: currentTimeSpentRef.current,
         timestamp: new Date().toISOString()
       })
 
       // Crash case: 언마운트시 타이머가 실행 중이었는지 로깅
       logTimerOnUnmount({
-        state: timerState,
-        todoId: currentTodoId,
-        timeSpent: currentTimeSpent,
+        state: timerStateRef.current,
+        todoId: currentTodoIdRef.current,
+        timeSpent: currentTimeSpentRef.current,
         hadActiveInterval
       })
 
@@ -46,15 +57,15 @@ export const useTimer = ({ onTodoTimeUpdate }) => {
         } catch (error) {
           // Crash case: interval 정리 실패 로깅
           logIntervalCleanupFailure({
-            state: timerState,
-            todoId: currentTodoId,
-            timeSpent: currentTimeSpent,
+            state: timerStateRef.current,
+            todoId: currentTodoIdRef.current,
+            timeSpent: currentTimeSpentRef.current,
             error: error.message
           })
         }
       }
     }
-  }, [timerState, currentTodoId, currentTimeSpent])
+  }, [])
 
   const startTimer = (todoId, existingTimeSpent = 0, getCurrentTimeSpent) => {
     console.log('▶️ [Timer] 타이머 시작 요청', {

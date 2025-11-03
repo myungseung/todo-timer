@@ -11,8 +11,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 // Install 이벤트
 self.addEventListener('install', () => {
   console.log('📦 [SW] Install 이벤트', {
-    timestamp: new Date().toISOString(),
-    manifestLength: self.__WB_MANIFEST?.length
+    timestamp: new Date().toISOString()
   })
 })
 
